@@ -1,0 +1,166 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>화장품 음성 안내</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding:
+        max(12px, env(safe-area-inset-top))
+        14px
+        max(12px, env(safe-area-inset-bottom));
+      font-family: sans-serif;
+      background: #fffafc;
+      color: #49313d;
+    }
+
+    header, footer {
+      text-align: center;
+      padding: 12px 4px;
+    }
+
+    header {
+      font-size: 17px;
+      font-weight: bold;
+    }
+
+    footer {
+      font-size: 14px;
+      color: #666;
+    }
+
+    #playButton {
+      flex: 1;
+      width: 100%;
+      border: none;
+      border-radius: 24px;
+      background: #f8dce8;
+      color: #49313d;
+      font-size: 25px;
+      font-weight: bold;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    #playButton:focus-visible {
+      outline: 4px solid #70445a;
+      outline-offset: 3px;
+    }
+
+    #symbol {
+      font-size: 64px;
+    }
+
+    #status {
+      font-size: 16px;
+      font-weight: normal;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    화장품 음성 안내 서비스
+  </header>
+
+  <button id="playButton"
+    aria-label="화장품 음성 안내 재생"
+    aria-pressed="false">
+
+    <span id="symbol" aria-hidden="true">▶</span>
+
+    <span id="message">
+      화면 가운데를 눌러주세요
+    </span>
+
+    <span id="status" aria-live="polite">
+      음성 안내를 시작합니다
+    </span>
+
+  </button>
+
+  <footer>
+    음성 안내를 들으려면 가운데 영역을 눌러주세요.
+  </footer>
+
+  <audio id="audio" preload="metadata"></audio>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const product = params.get("product") || "a";
+
+    const audio = document.getElementById("audio");
+    const button = document.getElementById("playButton");
+    const message = document.getElementById("message");
+    const status = document.getElementById("status");
+    const symbol = document.getElementById("symbol");
+
+    const audioFiles = {
+      a: "product-a.mp3",
+      b: "product-b.mp3"
+    };
+
+    audio.src = audioFiles[product] || audioFiles.a;
+
+    button.addEventListener("click", async () => {
+
+      if (!audio.paused && !audio.ended) {
+        audio.pause();
+
+        message.textContent = "일시정지";
+        status.textContent = "다시 누르면 이어서 재생합니다.";
+        symbol.textContent = "▶";
+        button.setAttribute("aria-label", "음성 안내 이어 듣기");
+        button.setAttribute("aria-pressed", "false");
+
+      } else {
+        try {
+          if (audio.ended) {
+            audio.currentTime = 0;
+          }
+
+          await audio.play();
+
+          message.textContent = "음성 안내 재생 중";
+          status.textContent = "다시 누르면 일시정지합니다.";
+          symbol.textContent = "Ⅱ";
+          button.setAttribute("aria-label", "음성 안내 일시정지");
+          button.setAttribute("aria-pressed", "true");
+
+        } catch (error) {
+          message.textContent = "음성을 재생할 수 없습니다";
+          status.textContent = "인터넷 연결과 음성 파일을 확인해 주세요.";
+        }
+      }
+    });
+
+    audio.addEventListener("ended", () => {
+      message.textContent = "안내가 끝났습니다";
+      status.textContent = "누르면 처음부터 다시 들을 수 있습니다.";
+      symbol.textContent = "▶";
+      button.setAttribute("aria-label", "음성 안내 처음부터 재생");
+      button.setAttribute("aria-pressed", "false");
+    });
+
+  </script>
+
+</body>
+</html>
